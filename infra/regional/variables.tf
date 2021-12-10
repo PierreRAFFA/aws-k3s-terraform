@@ -16,3 +16,12 @@ variable "num_masters" {
 variable "num_workers" {
   default = 1
 }
+
+
+variable "containerPort" {
+  default = 80
+}
+
+variable "cluster_id" {
+  default = "aws-k3s"
+}

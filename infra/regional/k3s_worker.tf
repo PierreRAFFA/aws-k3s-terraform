@@ -1,6 +1,6 @@
 resource "aws_autoscaling_group" "aws_k3s_worker" {
   name = "${var.env}_aws_k3s_worker"
-  max_size = 1
+  max_size = 2
   min_size = 0
   launch_configuration = aws_launch_configuration.aws_k3s_worker.name
   vpc_zone_identifier = [aws_subnet.public1.id]
@@ -17,6 +17,10 @@ resource "aws_autoscaling_group" "aws_k3s_worker" {
   },{
     key = "Env"
     value = "${var.env}_aws_k3s_worker"
+    propagate_at_launch = true
+  },{
+    key = "kubernetes.io/cluster/${var.cluster_id}"
+    value = "owned"
     propagate_at_launch = true
   }]
 }
@@ -47,11 +51,37 @@ resource "aws_launch_configuration" "aws_k3s_worker" {
   # More info here https://docs.aws.amazon.com/AmazonECS/latest/developerguide/launch_container_instance.html
   user_data = data.template_file.aws_k3s_userdata_worker.rendered
 
-  security_groups = [aws_security_group.aws_k3s_access.id, aws_security_group.aws_k3s_ssh.id]
+  security_groups = [
+    aws_security_group.aws_k3s_main.id
+  ]
 }
 
+# resource "aws_security_group" "aws_k3s_worker_http" {
+#   name   = "${var.env}_aws_k3s_worker_http"
+#   vpc_id = aws_vpc.aws_k3s.id
+
+#   ingress {
+#     from_port       = 80
+#     to_port         = 80
+#     protocol        = "tcp"
+#     cidr_blocks = ["0.0.0.0/0"]
+#   }
+
+#   egress {
+#     from_port   = 0
+#     to_port     = 0
+#     protocol    = "-1"
+#     cidr_blocks = ["0.0.0.0/0"]
+#   }
+
+#   tags = {
+#     Name = "${var.env}_aws_k3s_worker_http"
+#     "kubernetes.io/cluster/${var.cluster_id}" = "owned"
+#   }
+# }
+
 data "template_file" "aws_k3s_userdata_worker" {
-  template = "${file("userdata_worker.tpl")}"
+  template = "${file("userdata_worker_docker.tpl")}"
   vars = {
     region = var.region
     secretsmanager_secret_id = aws_secretsmanager_secret.aws_k3s_token.name

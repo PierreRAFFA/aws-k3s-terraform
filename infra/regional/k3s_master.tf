@@ -18,6 +18,10 @@ resource "aws_autoscaling_group" "aws_k3s_master" {
     key = "Env"
     value = "${var.env}_aws_k3s_master"
     propagate_at_launch = true
+  },{
+    key = "kubernetes.io/cluster/${var.cluster_id}"
+    value = "owned"
+    propagate_at_launch = true
   }]
 }
 
@@ -29,7 +33,7 @@ resource "aws_autoscaling_group" "aws_k3s_master" {
 resource "aws_launch_configuration" "aws_k3s_master" {
   name_prefix = "${var.env}_aws_k3s_master"
   image_id = "ami-033fbb55f5a2a0f37" # amazon/amzn2-ami-hvm-2.0.20210421.0-x86_64-ebs
-  instance_type = "t3.micro"
+  instance_type = "t3.small"
 
   # An instance profile is a container for an IAM role that you can use to pass role information to an EC2 instance when the instance starts.
   iam_instance_profile = aws_iam_instance_profile.aws_k3s_master.name
@@ -47,14 +51,17 @@ resource "aws_launch_configuration" "aws_k3s_master" {
   # More info here https://docs.aws.amazon.com/AmazonECS/latest/developerguide/launch_container_instance.html
   user_data = data.template_file.aws_k3s_userdata_master.rendered
 
-  security_groups = [aws_security_group.aws_k3s_access.id, aws_security_group.aws_k3s_ssh.id]
+  security_groups = [
+    aws_security_group.aws_k3s_main.id
+  ]
 }
 
 data "template_file" "aws_k3s_userdata_master" {
-  template = "${file("userdata_master.tpl")}"
+  template = "${file("userdata_master_cc_docker.tpl")}"
   vars = {
     region = var.region
     secretsmanager_secret_id = aws_secretsmanager_secret.aws_k3s_token.name
+    cluster_id = var.cluster_id
   }
 }
 
@@ -87,6 +94,33 @@ resource "aws_iam_role" "aws_k3s_master" {
   ]
 }
 EOF
+}
+
+resource "aws_iam_role_policy_attachment" "AmazonEC2ContainerRegistryReadOnly" {
+  policy_arn = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
+  role       = aws_iam_role.aws_k3s_master.name
+}
+
+# The master node needs:
+# `ecr:GetAuthorizationToken` to get the ecr token which will be stored in Secret
+resource "aws_iam_role_policy" "aws_k3s_master" {
+  name = "${var.env}_aws_k3s_master"
+  role = aws_iam_role.aws_k3s_master.id
+  
+  policy = <<EOL
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "ecr:GetAuthorizationToken"
+      ],
+      "Resource": "*"
+    }
+  ]
+}
+EOL
 }
 
 ################################################################################################################
