@@ -1,7 +1,10 @@
 # aws-k3s-terraform
 
-K3s cluster build with Terraform and deployed on AWS EC2 instances.
+K3s cluster build with Terraform and deployed on AWS EC2 instances.  
 The container-runtime used is Docker.
+
+The cluster runs [cloud-provider-aws](https://github.com/kubernetes/cloud-provider-aws) which is an interface between a Kubernetes cluster and AWS service APIs. It will be responsible to spin the load balancers up.  
+
 
 The cluster runs 2 Go apps (ms-users, ms-payments) which serve a api server on port 8080.  
 The api route are respectively:
@@ -9,7 +12,6 @@ The api route are respectively:
  - **GET** /api/payments/qwe
 
 # Technical Overview
-
 - k3s
 - Helm
 - AWS (EC2, Cloudfront, AutoscalingGroup)
@@ -17,6 +19,9 @@ The api route are respectively:
 - Terraform
 - Bash
 - Go
+
+# High Level Architecture
+![hla](./docs/HLA.png)
 
 # Install
 
@@ -26,13 +31,20 @@ cd infrastructure/regional
 AWS_ACCESS_KEY_ID={your_access_key} AWS_SECRET_ACCESS_KEY={your_secret} ENV=prod REGION={your_region} ./_deploy.sh
 ```
 
-### Once the k3s master up and running, ssh into it and get kubeconfig from the master node
+### Create the master node
+In AWS Console, edit the desired capacity of the master Autoscaling group to 1.   
+
+### Once the k3s master up and running, get kubeconfig from the master node
+Ssh into the master node and run:
 ```sh
 cat /etc/rancher/k3s/k3s.yaml
 ```
 
-### Create secret from the master for ecr login of the workers
+### Create secret from the master node for ecr login of the workers
+Ssh into the master node and run:
+```bash
 kubectl create secret docker-registry regcred   --docker-server=940432861086.dkr.ecr.eu-west-2.amazonaws.com  --docker-username=AWS --docker-password=$(aws ecr get-login-password --region eu-west-2)
+```
 
 ### Install ms-users chart
 ```bash
