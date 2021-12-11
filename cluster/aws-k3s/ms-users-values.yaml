@@ -5,14 +5,16 @@
 replicaCount: 2
 
 image:
-  repository: 940432861086.dkr.ecr.eu-west-2.amazonaws.com/app2
+  repository: 940432861086.dkr.ecr.eu-west-2.amazonaws.com/ms-users
   pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
   tag: "latest"
 
-imagePullSecrets: []
-nameOverride: "app2"
-fullnameOverride: "app2"
+imagePullSecrets:
+  - name: regcred
+
+nameOverride: "ms-users"
+fullnameOverride: "ms-users"
 
 serviceAccount:
   # Specifies whether a service account should be created
@@ -39,6 +41,14 @@ securityContext: {}
 service:
   type: LoadBalancer
   port: 80
+  annotations:
+    # Annotations for the service controller can be found at:
+    # https://cloud-provider-aws.sigs.k8s.io/service_controller/
+
+    service.beta.kubernetes.io/aws-load-balancer-additional-resource-tags: "app=ms-users"
+    service.beta.kubernetes.io/aws-load-balancer-access-log-s3-bucket-name: prod-aws-k3s-lb
+    #Indicates the type of Load Balancer. The only valid value is nlb. Leaving this field blank is equivalent to selecting ELB.
+    service.beta.kubernetes.io/aws-load-balancer-type: ""
 
 container:
   port: 8080

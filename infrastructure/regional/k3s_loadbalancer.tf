@@ -1,13 +1,13 @@
-# Elastic Load Balancing distributes incoming application or network traffic across multiple targets,
-# such as Amazon EC2 instances, containers, and IP addresses, in multiple Availability Zones.
-# Elastic Load Balancing scales your load balancer as traffic to your application changes over time.
-# It can automatically scale to the vast majority of workloads.
-# For the `load_balancer_type` see https://aws.amazon.com/elasticloadbalancing/features/#compare
-# resource "aws_lb" "aws_k3s" {
-#   name = "${var.env}-aws-k3s"
+# # Elastic Load Balancing distributes incoming application or network traffic across multiple targets,
+# # such as Amazon EC2 instances, containers, and IP addresses, in multiple Availability Zones.
+# # Elastic Load Balancing scales your load balancer as traffic to your application changes over time.
+# # It can automatically scale to the vast majority of workloads.
+# # For the `load_balancer_type` see https://aws.amazon.com/elasticloadbalancing/features/#compare
+# resource "aws_lb" "aws_k3s_api" {
+#   name = "${var.env}-aws-k3s-api"
 #   load_balancer_type = "application"
 #   internal = false
-#   security_groups = [aws_security_group.aws_k3s_lb.id]
+#   security_groups = [aws_security_group.aws_k3s_api_lb.id]
 
 #   //to the public subnets as the service is exposed to the world
 #   subnets = [
@@ -23,29 +23,45 @@
 
 # }
 
-resource "aws_security_group" "aws_k3s_lb" {
-  name        = "${var.env}_aws_k3s_lb"
-  description = "k3s service"
-  vpc_id      = aws_vpc.aws_k3s.id
+# # Loadbalancer and its target group
+# resource "aws_lb_target_group" "aws_k3s_api" {
+#   name     = "${var.env}-aws-k3s-api"
+#   port     = 6443
+#   protocol = "TCP"
+#   vpc_id   = aws_vpc.aws_k3s.id
 
-  ingress {
-    from_port         = 0
-    protocol          = "-1"
-    to_port           = 0
-    cidr_blocks       = ["0.0.0.0/0"]
-  }
+#   health_check {
+#     healthy_threshold   = "5"
+#     unhealthy_threshold = "2"
+#     interval            = "30"
+#     matcher             = "401"
+#     path                = "/livez"
+#     port                = "traffic-port"
+#     protocol            = "HTTP"
+#     timeout             = "5"
+#   }
 
-  egress {
-    from_port         = 0
-    protocol          = "-1"
-    to_port           = 0
-    cidr_blocks       = ["0.0.0.0/0"]
-  }
+# }
 
-  tags = {
-    Name = "${var.env}_aws_k3s"
-  }
-}
+# resource "aws_security_group" "aws_k3s_api_lb" {
+#   name        = "${var.env}-aws-k3s-api-lb"
+#   description = "For k3s api"
+#   vpc_id      = aws_vpc.aws_k3s.id
+
+#   ingress {
+#     from_port         = 6443
+#     protocol          = "-1"
+#     to_port           = 6443
+#     cidr_blocks       = ["0.0.0.0/0"]
+#   }
+
+#   egress {
+#     from_port         = 0
+#     protocol          = "-1"
+#     to_port           = 0
+#     cidr_blocks       = ["0.0.0.0/0"]
+#   }
+# }
 
 # Enable access logs for the Load Balancer
 # https://docs.aws.amazon.com/elasticloadbalancing/latest/classic/enable-access-logs.html
@@ -100,5 +116,4 @@ EOL
       days = 90
     }
   }
-
 }

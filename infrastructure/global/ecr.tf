@@ -1,6 +1,6 @@
-resource "aws_ecr_repository" "app1" {
+resource "aws_ecr_repository" "ms-users" {
   provider = aws.eu-west-2
-  name                 = "app1"
+  name                 = "ms-users"
   image_tag_mutability = "MUTABLE"
 
   image_scanning_configuration {
@@ -8,9 +8,9 @@ resource "aws_ecr_repository" "app1" {
   }
 }
 
-resource "aws_ecr_repository" "app2" {
+resource "aws_ecr_repository" "ms-payments" {
   provider = aws.eu-west-2
-  name                 = "app2"
+  name                 = "ms-payments"
   image_tag_mutability = "MUTABLE"
 
   image_scanning_configuration {

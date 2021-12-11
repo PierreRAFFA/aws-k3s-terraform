@@ -207,5 +207,5 @@ runcmd:
  - kubectl patch node $(hostname) -p '{"spec":{"unschedulable":true}}}']
  - |
     token=$(cat /var/lib/rancher/k3s/server/node-token) && \
-    master_private_ip=$(ifconfig | grep eth0 -A 1 | grep inet | awk '{print $2}') && \
+    master_private_ip=$(ifconfig | grep eth0: -A 1 | grep inet | awk '{print $2}') && \
     aws secretsmanager put-secret-value --secret-id ${secretsmanager_secret_id} --secret-string "$master_private_ip $token" --region ${region}
