@@ -35,6 +35,8 @@ resource "aws_launch_configuration" "aws_k3s_worker" {
   image_id = "ami-033fbb55f5a2a0f37" # amazon/amzn2-ami-hvm-2.0.20210421.0-x86_64-ebs
   instance_type = "t3.micro"
 
+  key_name = aws_key_pair.aws_k3s_admin.key_name
+  
   # An instance profile is a container for an IAM role that you can use to pass role information to an EC2 instance when the instance starts.
   iam_instance_profile = aws_iam_instance_profile.aws_k3s_worker.name
 

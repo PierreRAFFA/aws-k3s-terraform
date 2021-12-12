@@ -3,11 +3,10 @@
 K3s cluster build with Terraform and deployed on AWS EC2 instances.  
 The container-runtime used is Docker.
 
-The cluster runs [cloud-provider-aws](https://github.com/kubernetes/cloud-provider-aws) which is an interface between a Kubernetes cluster and AWS service APIs. It will be responsible to spin the load balancers up.  
+The cluster runs [cloud-provider-aws](https://github.com/kubernetes/cloud-provider-aws) which is an interface between a Kubernetes cluster and AWS service APIs. It will be responsible to spin some AWS resources up when need be, such as load balancers.  
 
-
-The cluster runs 2 Go apps (ms-users, ms-payments) which serve a api server on port 8080.  
-The api route are respectively:
+The cluster runs 2 microservices (ms-users, ms-payments) on port 8080.  
+The api routes are respectively:
  - **GET** /api/users/1
  - **GET** /api/payments/qwe
 
