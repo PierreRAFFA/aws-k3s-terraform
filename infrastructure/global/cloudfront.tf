@@ -1,27 +1,29 @@
 resource "aws_cloudfront_distribution" "aws_k3s" {
   is_ipv6_enabled = true
   enabled = true
-  # aliases = ["cdn-${var.env}-aws-k3s"]
+  aliases = [var.domain]
 
   origin {
     domain_name = data.aws_elb.ms_users_lb.dns_name
     origin_id = "ms-users"
+
     custom_origin_config {
       http_port = 80
       https_port = 443
       origin_protocol_policy = "http-only"
-      origin_ssl_protocols = ["TLSv1"]
+      origin_ssl_protocols = ["TLSv1.2"]
     }
   }
 
   origin {
     domain_name = data.aws_elb.ms_payments_lb.dns_name
     origin_id = "ms-payments"
+
     custom_origin_config {
       http_port = 80
       https_port = 443
       origin_protocol_policy = "http-only"
-      origin_ssl_protocols = ["TLSv1"]
+      origin_ssl_protocols = ["TLSv1.2"]
     }
   }
 
@@ -38,7 +40,7 @@ resource "aws_cloudfront_distribution" "aws_k3s" {
       }
     }
 
-    viewer_protocol_policy = "allow-all"
+    viewer_protocol_policy = "redirect-to-https"
     min_ttl                = 0
     default_ttl            = 3600
     max_ttl                = 86400
@@ -63,7 +65,7 @@ resource "aws_cloudfront_distribution" "aws_k3s" {
     default_ttl            = 10
     max_ttl                = 10
     compress               = true
-    viewer_protocol_policy = "allow-all"
+    viewer_protocol_policy = "redirect-to-https"
   }
 
   ordered_cache_behavior {
@@ -85,7 +87,7 @@ resource "aws_cloudfront_distribution" "aws_k3s" {
     default_ttl            = 10
     max_ttl                = 10
     compress               = true
-    viewer_protocol_policy = "allow-all"
+    viewer_protocol_policy = "redirect-to-https"
   }
 
   restrictions {
@@ -95,6 +97,12 @@ resource "aws_cloudfront_distribution" "aws_k3s" {
   }
 
   viewer_certificate{
-    cloudfront_default_certificate = true
+    acm_certificate_arn = data.aws_acm_certificate.domain.arn
+    ssl_support_method = "sni-only"
   }
+}
+
+data "aws_acm_certificate" "domain" {
+  domain = var.domain
+  provider = aws.us-east-1
 }
